@@ -30,6 +30,25 @@ struct ContentView: View {
     }
 }
 
+class ViewModel1: ObservableObject {
+    var objectWillChange: ObservableObjectPublisher = .init()
+    let itemResults: Results<ItemEntity>
+    private var notificationTokens: [NotificationToken] = []
+    
+    init(itemResults: Results<ItemEntity>) {
+        self.itemResults = itemResults
+        notificationTokens.append(itemResults.observe { _ in
+            self.objectWillChange.send()
+        })
+    }
+    
+    deinit {
+        notificationTokens.forEach {
+            NotificationCenter.default.removeObserver($0)
+        }
+    }
+}
+
 import Combine
 class ViewModel: ObservableObject {
     var objectWillChange: ObservableObjectPublisher = .init()
