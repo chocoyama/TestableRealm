@@ -14,11 +14,11 @@ struct ContentView: View {
     
     var body: some View {
         List {
-            ForEach(0..<store.itemEntities.count) { index in
-                if self.store.itemEntities[index].isInvalidated {
+            ForEach(0..<store.itemResults.count) { index in
+                if self.store.itemResults.get(index).isInvalidated {
                     EmptyView()
                 } else {
-                    Text(self.store.itemEntities[index].name)
+                    Text(self.store.itemResults.get(index).name)
                 }
             }
         }.onAppear {
@@ -27,42 +27,15 @@ struct ContentView: View {
     }
 }
 
-protocol ResultsWrapper {
-    var count: Int { get }
-    func observe(_ handler: @escaping () -> Void) -> NotificationToken
-    subscript(index: Int) -> ItemEntity { get }
-}
-
-class ResultsWrapperImpl: ResultsWrapper {
-    private let itemEntities: Results<ItemEntity>
-    
-    init(itemEntities: Results<ItemEntity>) {
-        self.itemEntities = itemEntities
-    }
-    
-    var count: Int { itemEntities.count }
-    
-    func observe(_ handler: @escaping () -> Void) -> NotificationToken {
-        itemEntities.observe { _ in
-            handler()
-        }
-    }
-    
-    subscript(index: Int) -> ItemEntity {
-        get {
-            itemEntities[index]
-        }
-    }
-}
-
 import Combine
 class Store: ObservableObject {
     var objectWillChange: ObservableObjectPublisher = .init()
-    private(set) var itemEntities: ResultsWrapper = ResultsWrapperImpl(itemEntities: ItemEntity.all())
+    let itemResults: AnyResults<ItemEntity>
     private var notificationTokens: [NotificationToken] = []
     
-    init() {
-        notificationTokens.append(itemEntities.observe {
+    init(itemResults: AnyResults<ItemEntity>) {
+        self.itemResults = itemResults
+        notificationTokens.append(itemResults.observe {
             self.objectWillChange.send()
         })
     }
@@ -99,7 +72,7 @@ class ItemEntity: Object, Identifiable {
     
     private static func createFixture() -> [ItemEntity] {
         (0..<10)
-            .map { _ in (0..<1000).randomElement()! }
+            .map { _ in (0..<10000).randomElement()! }
             .map { number -> ItemEntity in
                 let item = ItemEntity()
                 item.id = "\(number)"
