@@ -14,7 +14,7 @@ struct ContentView: View {
     
     var body: some View {
         List {
-            ForEach(0..<store.itemEntities.total()) { index in
+            ForEach(0..<store.itemEntities.count) { index in
                 if self.store.itemEntities[index].isInvalidated {
                     EmptyView()
                 } else {
@@ -28,7 +28,7 @@ struct ContentView: View {
 }
 
 protocol ResultsWrapper {
-    func total() -> Int
+    var count: Int { get }
     func observe(_ handler: @escaping () -> Void) -> NotificationToken
     subscript(index: Int) -> ItemEntity { get }
 }
@@ -40,9 +40,7 @@ class ResultsWrapperImpl: ResultsWrapper {
         self.itemEntities = itemEntities
     }
     
-    func total() -> Int {
-        itemEntities.count
-    }
+    var count: Int { itemEntities.count }
     
     func observe(_ handler: @escaping () -> Void) -> NotificationToken {
         itemEntities.observe { _ in
