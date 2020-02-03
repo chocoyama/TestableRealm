@@ -10,15 +10,18 @@ import SwiftUI
 import RealmSwift
 
 struct ContentView: View {
-    @EnvironmentObject private var store: Store
+    @ObservedObject private var viewModel = ViewModel(
+        itemResults: .init(ItemResults(ItemEntity.all()))
+//        itemResults: .init(StubItemResults())
+    )
     
     var body: some View {
         List {
-            ForEach(0..<store.itemResults.count) { index in
-                if self.store.itemResults.get(index).isInvalidated {
+            ForEach(0..<viewModel.itemResults.count) { index in
+                if self.viewModel.itemResults.get(index).isInvalidated {
                     EmptyView()
                 } else {
-                    Text(self.store.itemResults.get(index).name)
+                    Text(self.viewModel.itemResults.get(index).name)
                 }
             }
         }.onAppear {
@@ -28,7 +31,7 @@ struct ContentView: View {
 }
 
 import Combine
-class Store: ObservableObject {
+class ViewModel: ObservableObject {
     var objectWillChange: ObservableObjectPublisher = .init()
     let itemResults: AnyResults<ItemEntity>
     private var notificationTokens: [NotificationToken] = []
