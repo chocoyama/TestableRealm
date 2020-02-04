@@ -7,21 +7,19 @@
 //
 
 import SwiftUI
+import Combine
 import RealmSwift
 
 struct ContentView: View {
-    @ObservedObject private var viewModel = ViewModel(
-        itemResults: .init(ItemResults(ItemEntity.all()))
-//        itemResults: .init(StubItemResults())
-    )
+    @ObservedObject private var viewModel = ViewModel(ItemRepositoryMock())
     
     var body: some View {
         List {
-            ForEach(0..<viewModel.itemResults.count) { index in
-                if self.viewModel.itemResults.get(index).isInvalidated {
+            ForEach(viewModel.itemResults) { itemEntity in
+                if itemEntity.isInvalidated {
                     EmptyView()
                 } else {
-                    Text(self.viewModel.itemResults.get(index).name)
+                    Text(itemEntity.name)
                 }
             }
         }.onAppear {
@@ -30,34 +28,14 @@ struct ContentView: View {
     }
 }
 
-class ViewModel1: ObservableObject {
+class ViewModel: ObservableObject {
     var objectWillChange: ObservableObjectPublisher = .init()
     let itemResults: Results<ItemEntity>
     private var notificationTokens: [NotificationToken] = []
     
-    init(itemResults: Results<ItemEntity>) {
-        self.itemResults = itemResults
+    init(_ itemRepository: ItemRepository) {
+        self.itemResults = itemRepository.getAll()
         notificationTokens.append(itemResults.observe { _ in
-            self.objectWillChange.send()
-        })
-    }
-    
-    deinit {
-        notificationTokens.forEach {
-            NotificationCenter.default.removeObserver($0)
-        }
-    }
-}
-
-import Combine
-class ViewModel: ObservableObject {
-    var objectWillChange: ObservableObjectPublisher = .init()
-    let itemResults: AnyResults<ItemEntity>
-    private var notificationTokens: [NotificationToken] = []
-    
-    init(itemResults: AnyResults<ItemEntity>) {
-        self.itemResults = itemResults
-        notificationTokens.append(itemResults.observe {
             self.objectWillChange.send()
         })
     }

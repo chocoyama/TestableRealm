@@ -24,6 +24,7 @@ class StubItemResults: StubEntityWrapper {
     let entities: [ItemEntity]  = {
         (0..<10).map {
             let entity = ItemEntity()
+            entity.id = "\($0)"
             entity.name = "\($0)"
             return entity
         }
